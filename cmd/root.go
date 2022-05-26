@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"xtool/cmd/fileserver"
 	"xtool/cmd/version"
 )
 
@@ -21,4 +22,5 @@ func Execute() {
 
 func init() {
 	root.AddCommand(version.Cmd)
+	root.AddCommand(fileserver.Cmd)
 }

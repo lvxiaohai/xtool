@@ -1,0 +1,66 @@
+package fileserver
+
+import (
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"os"
+)
+
+func FileServer(dir string, port int) {
+	if dir == "" {
+		log.Fatalln("必须指定文件夹dir")
+	}
+	isExists, err := pathExists(dir)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if !isExists {
+		log.Fatalf("文件夹[%s]不存在\n", dir)
+	}
+
+	handler := http.NewServeMux()
+
+	handler.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.URL)
+		w.Header().Set("Cache-Control", "no-cache")
+		http.ServeFile(w, r, dir+r.URL.Path)
+	})
+
+	addrs := ipAddrs()
+	log.Printf("文件夹: %s\n", dir)
+	log.Printf("监听端口: %d\n", port)
+	for _, addr := range addrs {
+		log.Printf("浏览地址: http://%s:%d", addr, port)
+	}
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), handler))
+}
+
+func pathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
+func ipAddrs() []string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return nil
+	}
+
+	result := make([]string, 0)
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok {
+			if ipnet.IP.To4() != nil {
+				result = append(result, ipnet.IP.String())
+			}
+		}
+	}
+	return result
+}
