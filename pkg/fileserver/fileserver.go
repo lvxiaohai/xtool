@@ -33,7 +33,7 @@ func FileServer(dir string, port int) {
 		if err == nil && sleep > 0 {
 			time.Sleep(time.Duration(sleep) * time.Second)
 		}
-		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Cache-Control", "no-store")
 		http.ServeFile(w, r, dir+r.URL.Path)
 	})
 
