@@ -6,6 +6,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 )
 
 func FileServer(dir string, port int) {
@@ -22,8 +24,15 @@ func FileServer(dir string, port int) {
 
 	handler := http.NewServeMux()
 
+	// ?sleep=1 睡眠sleep秒后返回
 	handler.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.URL)
+
+		q := r.URL.Query()
+		sleep, err := strconv.Atoi(q.Get("sleep"))
+		if err == nil && sleep > 0 {
+			time.Sleep(time.Duration(sleep) * time.Second)
+		}
 		w.Header().Set("Cache-Control", "no-cache")
 		http.ServeFile(w, r, dir+r.URL.Path)
 	})
