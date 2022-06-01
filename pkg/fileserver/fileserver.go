@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func FileServer(dir string, port int) {
+func FileServer(dir string, port, globalSleep int) {
 	if dir == "" {
 		log.Fatalln("必须指定文件夹dir")
 	}
@@ -29,8 +29,11 @@ func FileServer(dir string, port int) {
 		log.Println(r.URL)
 
 		q := r.URL.Query()
-		sleep, err := strconv.Atoi(q.Get("sleep"))
-		if err == nil && sleep > 0 {
+		sleep, _ := strconv.Atoi(q.Get("sleep"))
+		if globalSleep > sleep {
+			sleep = globalSleep
+		}
+		if sleep > 0 {
 			time.Sleep(time.Duration(sleep) * time.Second)
 		}
 		w.Header().Set("Cache-Control", "no-store")
@@ -38,6 +41,9 @@ func FileServer(dir string, port int) {
 	})
 
 	addrs := ipAddrs()
+	if globalSleep > 0 {
+		log.Printf("全局sleep: %d秒\n", globalSleep)
+	}
 	log.Printf("文件夹: %s\n", dir)
 	log.Printf("监听端口: %d\n", port)
 	for _, addr := range addrs {
